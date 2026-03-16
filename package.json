@@ -23,6 +23,7 @@
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/node": "^24",
+		"@types/papaparse": "^5.5.2",
 		"eslint": "^9.39.2",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.14.0",
@@ -41,5 +42,18 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"@faker-js/faker": "^10.3.0",
+		"@tanstack/table-core": "^8.21.3",
+		"bits-ui": "^2.16.3",
+		"fast-sort": "^3.4.1",
+		"fast-xml-parser": "^5.5.5",
+		"fuse.js": "^7.1.0",
+		"papaparse": "^5.5.3",
+		"runed": "^0.37.1",
+		"tzezars-datagrid": "^2.4.0",
+		"xlsx": "^0.18.5",
+		"zod": "^4.3.6"
 	}
 }
