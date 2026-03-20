@@ -1,9 +1,10 @@
 import { isGroupColumn } from "../helpers/column-guards";
 import type { DatagridCore } from "../index.svelte";
-import type { FilterCondition, FilterOperator } from "../types";
+import type { CellValue, FilterCondition, FilterOperator } from "../types";
 import { findColumnById, flattenColumnStructureAndClearGroups } from "../utils.svelte";
 
 export type ColumnFilteringState = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- filter conditions accept any row type
     conditions: FilterCondition<any>[]; // List of filter conditions for columns
     isManual: boolean; // Indicates if filters are applied manually
 }
@@ -15,6 +16,7 @@ export type IColumnFilteringFeature = ColumnFilteringFeature;
  * Manages column filtering functionality for a data grid.
  * Provides utilities for evaluating filter conditions and toggling the visibility of filters.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic row type default must be any for variance compatibility
 export class ColumnFilteringFeature<TOriginalRow = any> implements IColumnFilteringFeature {
     datagrid: DatagridCore; // Reference to the parent DataGrid
 
@@ -37,7 +39,7 @@ export class ColumnFilteringFeature<TOriginalRow = any> implements IColumnFilter
      * @param columnId - The ID of the column to get the filter condition value for.
      * @returns The filter condition value or `null` if no condition exists for the column.
      */
-    getConditionValue(columnId: string): any {
+    getConditionValue(columnId: string): CellValue | null {
         const condition = this.filterConditions.find(c => c.columnId === columnId);
         return condition ? condition.value : null;
     }
@@ -47,7 +49,7 @@ export class ColumnFilteringFeature<TOriginalRow = any> implements IColumnFilter
      * @param columnId - The ID of the column to get the range filter 'to' value for.
      * @returns The 'to' filter condition value or `null` if no condition exists for the column.
      */
-    getConditionValueTo(columnId: string): any {
+    getConditionValueTo(columnId: string): number | undefined | null {
         const condition = this.filterConditions.find(c => c.columnId === columnId);
         return condition ? condition.valueTo : null;
     }
@@ -96,7 +98,7 @@ export class ColumnFilteringFeature<TOriginalRow = any> implements IColumnFilter
      * @param condition - The filter condition to evaluate against.
      * @returns `true` if the cell value satisfies the condition, otherwise `false`.
      */
-    evaluateCondition(cellValue: any, condition: FilterCondition<TOriginalRow>): boolean {
+    evaluateCondition(cellValue: CellValue, condition: FilterCondition<TOriginalRow>): boolean {
         const { value, valueTo, operator } = condition;
 
         // Handle null/undefined cell values
@@ -107,6 +109,10 @@ export class ColumnFilteringFeature<TOriginalRow = any> implements IColumnFilter
         // Convert to string for string operations
         const stringCellValue = String(cellValue).toLowerCase();
         const stringValue = String(value).toLowerCase();
+
+        // Numeric coercion for comparison operators
+        const numCell = Number(cellValue);
+        const numValue = Number(value);
 
         switch (operator) {
             case 'equals':
@@ -128,20 +134,20 @@ export class ColumnFilteringFeature<TOriginalRow = any> implements IColumnFilter
                 return stringCellValue.endsWith(stringValue);
 
             case 'greaterThan':
-                return cellValue > value;
+                return numCell > numValue;
 
             case 'lessThan':
-                return cellValue < value;
+                return numCell < numValue;
 
             case 'greaterThanOrEqual':
-                return cellValue >= value;
+                return numCell >= numValue;
 
             case 'lessThanOrEqual':
-                return cellValue <= value;
+                return numCell <= numValue;
 
             case 'between':
                 if (valueTo === undefined) throw new Error('Between filter requires a second value');
-                return cellValue >= value && cellValue <= valueTo;
+                return numCell >= numValue && numCell <= valueTo;
 
             case 'inList':
                 return Array.isArray(value) && value.includes(cellValue);

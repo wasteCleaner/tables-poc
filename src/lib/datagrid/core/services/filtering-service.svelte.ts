@@ -1,4 +1,4 @@
-import type { FilterableColumn, FilterOperator, LeafColumn } from "../types";
+import type { CellValue, FilterableColumn, FilterOperator, LeafColumn } from "../types";
 import { BaseService } from "./base-service";
 
 /**
@@ -29,17 +29,18 @@ export class FilteringService extends BaseService {
      * 
      * @param {Object} props The filter condition properties.
      * @param {LeafColumn<any>} props.column The column to which the filter condition applies.
-     * @param {any} props.value The value for the filter condition.
-     * @param {any} [props.valueTo] The second value for range-based filters (e.g., 'between' filters).
+     * @param {CellValue} props.value The value for the filter condition.
+     * @param {number} [props.valueTo] The second value for range-based filters (e.g., 'between' filters).
      * @param {FilterOperator} props.operator The operator to use in the filter condition (e.g., 'equals', 'between').
      * 
      * @emits onFilterChange The event emitted when the filter condition changes.
      */
     updateFilterCondition(props: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts any row type column
         column: LeafColumn<any>,
-        value: any,
-        valueTo?: any, // Optional second value for range-based filters like 'between'
-        operator: FilterOperator, // Add operator to the props
+        value: CellValue,
+        valueTo?: number,
+        operator: FilterOperator,
     }) {
         this.datagrid.events.emit('onFilterChange', { column: props.column });
     
@@ -47,6 +48,7 @@ export class FilteringService extends BaseService {
         let column = props.column;
     
         if (column === null || !column.isFilterable()) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- narrowing from LeafColumn to FilterableColumn
         column = column as FilterableColumn<any>;
     
         if (!column) return;

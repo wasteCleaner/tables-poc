@@ -56,10 +56,10 @@
   }
 </script>
 
-<div class="relative max-h-[600px] overflow-auto rounded-md border border-gray-200">
+<div class="relative max-h-150 overflow-auto rounded-md border border-gray-200">
   <!-- Loading overlay -->
   {#if loading}
-    <div class="absolute inset-0 z-[60] flex items-center justify-center bg-white/60">
+    <div class="absolute inset-0 z-60 flex items-center justify-center bg-white/60">
       <div class="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
     </div>
   {/if}
@@ -71,7 +71,7 @@
         <tr>
           {#each headerGroup.headers as header (header.id)}
             <th
-              class="relative select-none whitespace-nowrap px-3 py-2
+              class="relative select-none overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2
                 {header.column.getIsPinned() ? 'sticky z-40 bg-gray-100' : ''}"
               style="width: {header.getSize()}px;{header.column.getIsPinned() === 'left' ? ` left: ${header.column.getStart('left')}px;` : ''}{header.column.getIsPinned() === 'right' ? ` right: ${header.column.getAfter('right')}px;` : ''}"
               colspan={header.colSpan}
@@ -114,9 +114,13 @@
 
                 <!-- Resize handle — z-50 to stay above pin toggle, w-1.5 for easier grab -->
                 {#if header.column.getCanResize()}
+                  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                   <div
-                    onmousedown={(e) => { console.log('TANSTACK resize mousedown', header.column.id); e.stopPropagation(); header.getResizeHandler()(e); }}
-                    ontouchstart={(e) => { e.stopPropagation(); header.getResizeHandler()(e); }}
+                    role="separator"
+                    aria-orientation="vertical"
+                    tabindex="-1"
+                    onmousedown={header.getResizeHandler()}
+                    ontouchstart={header.getResizeHandler()}
                     class="absolute top-0 right-0 z-50 h-full w-1.5 cursor-col-resize select-none touch-none
                       {header.column.getIsResizing() ? 'bg-blue-500' : 'hover:bg-gray-300'}"
                   ></div>
@@ -134,7 +138,7 @@
         <tr class="transition-colors hover:bg-gray-50 {rowBg(row)}">
           {#each [...row.getLeftVisibleCells(), ...row.getCenterVisibleCells(), ...row.getRightVisibleCells()] as cell (cell.id)}
             <td
-              class="whitespace-nowrap px-3 py-2
+              class="overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2
                 {cell.column.getIsPinned() ? `sticky z-10 ${rowBg(row) || 'bg-white'}` : ''}"
               style="width: {cell.column.getSize()}px;{cell.column.getIsPinned() === 'left' ? ` left: ${cell.column.getStart('left')}px;` : ''}{cell.column.getIsPinned() === 'right' ? ` right: ${cell.column.getAfter('right')}px;` : ''}"
             >

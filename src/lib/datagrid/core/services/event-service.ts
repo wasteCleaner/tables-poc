@@ -6,6 +6,7 @@ import type { EventPayloadMap } from "../types";
  * @template T The type of the event name, constrained to keys of `EventPayloadMap`.
  */
 export class EventService {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic event emitter requires flexible callback storage
     private listeners = new Map<keyof EventPayloadMap, ((data: any) => void)[]>(); 
 
     /**

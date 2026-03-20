@@ -25,7 +25,7 @@ import type { SortingFeatureConfig } from "./features/sorting.svelte";
  */
 // export type ColumnId<T = any> = keyof T | (string & {})
 export type ColumnId = string
-export type ExtractColumnIds<T> = T extends AccessorColumn<any, any>[]
+export type ExtractColumnIds<T> = T extends AccessorColumn<unknown, unknown>[]
     ? T[number]["columnId"]
     : never;
 export type ColumnType = "accessor" | "computed" | "display" | "group";
@@ -34,7 +34,7 @@ export type ColumnType = "accessor" | "computed" | "display" | "group";
  * Primitive and Cell Value Types
  */
 export type Primitive = string | number | boolean | null | undefined;
-export type CellValue = Primitive | Record<string, any> | Array<any>;
+export type CellValue = Primitive | Record<string, unknown> | Array<unknown>;
 export type GetValueFn<TOriginalRow> = (row: TOriginalRow) => CellValue;
 export type GetGroupValue<TOriginalRow> = (row: TOriginalRow) => CellValue;
 export type FormatterFn<TOriginalRow> = (row: TOriginalRow) => CellValue;
@@ -67,7 +67,7 @@ export type GridGroupRow<TOriginalRow> = {
     index: string;
     identifier: GridGroupRowIdentifier;
     groupKey: string;
-    groupValue: any[];
+    groupValue: CellValue[];
     depth: number;
     children: GridRow<TOriginalRow>[];
     aggregations: Aggregation[];
@@ -113,6 +113,7 @@ export type Aggregation = {
     columnId: ColumnId;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- aggregation functions accept heterogeneous value arrays
 export type AggregationFn = (values: any[]) => any;
 
 export type BaseAggregationConfig =
@@ -135,13 +136,14 @@ export type AggregationConfig =
  * Custom Cell and Header Types
  */
 export type CustomCellComponentWithProps = {
-    component: Component<any>;
-    props?: any;
+    component: Component<Record<string, unknown>>;
+    props?: Record<string, unknown>;
 };
 
 
 // Cell
 export type CustomCellProps<TOriginalRow> = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic cell props accept any row type
     datagrid: DatagridCore<any>;
     column: LeafColumn<any>;
     row: GridBasicRow<TOriginalRow>;
@@ -153,6 +155,7 @@ export type CustomCell<TOriginalRow> = (
 
 // Aggregated Cell
 export type AggregateCellProps<TOriginalRow> = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic cell props accept any row type
     datagrid: DatagridCore<any>;
     column: LeafColumn<any>;
     row: GridGroupRow<TOriginalRow>;
@@ -163,6 +166,7 @@ export type AggregatedCell<TOriginalRow> = (
 
 // Grouped Cell
 export type GroupedCellProps<TOriginalRow> = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic cell props accept any row type
     datagrid: DatagridCore<any>;
     column: LeafColumn<any>;
     row: GridGroupRow<TOriginalRow>;
@@ -175,6 +179,7 @@ export type GroupedCell<TOriginalRow> = (
 // Header Cell
 export type HeaderCellProps = {
     column: ColumnDef<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic header props accept any row type
     datagrid: DatagridCore<any>;
 };
 
@@ -221,7 +226,7 @@ export interface FilterCondition<TOriginalRow> {
     columnId: ColumnId;
     getValueFn: GetValueFn<TOriginalRow>;
     operator: FilterOperator;
-    value: any;
+    value: CellValue;
     valueTo?: number; // For 'between' operator
 }
 
@@ -441,7 +446,8 @@ export type ParentColumnId = string | null;
 
 
 export type FeatureConstructor<T> = {
-    new(datagrid: DatagridCore<any>, config?: any): T;  // Class signature
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- required for class constructor variance
+    new(datagrid: DatagridCore<any>, config?: any): T;
 };
 
 export type InitialState = {
@@ -516,14 +522,15 @@ export interface Command {
 
 export type CommandPayload = {
     type: string;
-    payload: any;
+    payload: unknown;
 }
 
-export type GridEventCallback<T = any> = (data: T) => void;
+export type GridEventCallback<T = unknown> = (data: T) => void;
 
 export type OnPageChangePayload = { prevPage: number; newPage: number };
 
 export type EventPayloadMap = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- event payloads must accept any row type
     'onColumnSort': { column: LeafColumn<any>, multisort?: boolean };
 
     'onRowPin': { rowId: GridRowIdentifier };
@@ -558,7 +565,7 @@ export type EventPayloadMap = {
     'onColumnPinningChange': { column: LeafColumn<any> };
     'onColumnReorder': { columnId: ColumnId, direction: ColumnMovementDirection };
 
-    'onCellEdit': { prevOriginalRow: any, newOriginalRow: any, prevValue: any, newValue: any, column: LeafColumn<any> };
+    'onCellEdit': { prevOriginalRow: unknown, newOriginalRow: unknown, prevValue: unknown, newValue: unknown, column: LeafColumn<any> };
 
 };
 

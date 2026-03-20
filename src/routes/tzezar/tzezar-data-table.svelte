@@ -167,7 +167,7 @@
         {#each datagrid.columns.getLeafColumnsInOrder() as col (col.columnId)}
           {#if col.state.visible}
             <th
-              class="relative select-none whitespace-nowrap px-3 py-2
+              class="relative select-none overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2
                 {isPinned(col) ? 'sticky z-40 bg-gray-100' : ''}"
               style="width: {col.state.size.width}px; left: {isPinnedLeft(col) ? col.state.pinning.offset + 'px' : 'auto'}; right: {isPinnedRight(col) ? col.state.pinning.offset + 'px' : 'auto'}"
             >
@@ -237,7 +237,7 @@
           {#each datagrid.columns.getLeafColumnsInOrder() as col (col.columnId)}
             {#if col.state.visible}
               <td
-                class="whitespace-nowrap px-3 py-2
+                class="overflow-hidden text-ellipsis whitespace-nowrap px-3 py-2
                   {isPinned(col) ? `sticky z-10 ${isSelected ? 'bg-blue-50' : isPinnedRow ? 'bg-yellow-50' : 'bg-white'}` : ''}"
                 style="width: {col.state.size.width}px; left: {isPinnedLeft(col) ? col.state.pinning.offset + 'px' : 'auto'}; right: {isPinnedRight(col) ? col.state.pinning.offset + 'px' : 'auto'}"
               >

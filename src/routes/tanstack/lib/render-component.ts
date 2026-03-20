@@ -25,6 +25,6 @@ export function renderComponent<TProps extends Record<string, unknown>>(
 	};
 }
 
-export function isRenderComponentConfig(value: unknown): value is RenderComponentConfig<any> {
+export function isRenderComponentConfig(value: unknown): value is RenderComponentConfig<Record<string, unknown>> {
 	return typeof value === 'object' && value !== null && RENDER_COMPONENT_SYMBOL in value;
 }

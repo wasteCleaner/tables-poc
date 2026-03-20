@@ -25,6 +25,6 @@ export function renderSnippet<TProps>(
 	};
 }
 
-export function isRenderSnippetConfig(value: unknown): value is RenderSnippetConfig<any> {
+export function isRenderSnippetConfig(value: unknown): value is RenderSnippetConfig<unknown> {
 	return typeof value === 'object' && value !== null && RENDER_SNIPPET_SYMBOL in value;
 }

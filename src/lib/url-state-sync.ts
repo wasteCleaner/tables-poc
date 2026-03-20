@@ -4,6 +4,7 @@
  * Handles popstate for back/forward navigation.
  */
 
+import { SvelteURLSearchParams } from 'svelte/reactivity';
 import { tableUrlStateSchema, type TableUrlState } from './schemas/table-url-state';
 
 /** Default values — omit from URL when value matches these */
@@ -19,7 +20,7 @@ export function readUrlState(): TableUrlState {
 		// SSR fallback — return schema defaults
 		return tableUrlStateSchema.parse({});
 	}
-	const params = Object.fromEntries(new URLSearchParams(window.location.search).entries());
+	const params = Object.fromEntries(new SvelteURLSearchParams(window.location.search).entries());
 	const result = tableUrlStateSchema.safeParse(params);
 	if (result.success) return result.data;
 	// On parse error, fall back to defaults
@@ -30,7 +31,7 @@ export function readUrlState(): TableUrlState {
 export function writeUrlState(state: Partial<TableUrlState>): void {
 	if (typeof window === 'undefined') return;
 
-	const params = new URLSearchParams();
+	const params = new SvelteURLSearchParams();
 
 	if (state.sort) params.set('sort', state.sort);
 	if (state.sortDir) params.set('sortDir', state.sortDir);

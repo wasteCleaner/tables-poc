@@ -1,22 +1,21 @@
 <!--
-  Tzezar Datagrid POC page — server-side data fetching, manual pagination/sorting,
-  column management via DatagridCore headless class
+  Tzezar Datagrid POC page — server-side data fetching via @tanstack/svelte-query,
+  manual pagination/sorting, column management via DatagridCore headless class
 -->
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import type { Employee, ApiResponse, FilterState } from '$lib/types/employee';
+  import { onMount, untrack } from 'svelte';
+  import type { Employee, FilterState } from '$lib/types/employee';
   import { DatagridCore } from '$lib/datagrid';
   import { tzezarColumns } from './lib/tzezar-column-definitions';
   import TzezarFilterToolbar from './tzezar-filter-toolbar.svelte';
   import TzezarDataTable from './tzezar-data-table.svelte';
   import TzezarPaginationControls from './tzezar-pagination-controls.svelte';
   import { readUrlState, writeUrlState, onPopState } from '$lib/url-state-sync';
+  import { createQuery, useQueryClient } from '@tanstack/svelte-query';
+  import { fetchEmployees, employeesQueryKey } from '$lib/api/employees';
 
   // ── State ──────────────────────────────────────────────────────────
-  let data = $state<Employee[]>([]);
   let totalRows = $state(0);
-  let loading = $state(false);
-  let refreshKey = $state(0);
 
   // Manual server-side sorting state (mirrors TanStack pattern)
   let sortColumn = $state('');
@@ -37,7 +36,6 @@
   let urlInitialized = $state(false);
 
   // ── DatagridCore instance ──────────────────────────────────────────
-  // isManual=true disables internal sorting/pagination so we manage server-side
   const datagrid = new DatagridCore<Employee>({
     columns: tzezarColumns,
     data: [],
@@ -62,7 +60,6 @@
     hireDateFrom = s.hireDateFrom ?? '';
     hireDateTo = s.hireDateTo ?? '';
 
-    // Parse JSON-encoded filters
     if (s.filters) {
       try {
         filters = JSON.parse(s.filters) as FilterState[];
@@ -101,20 +98,13 @@
   onMount(() => {
     applyUrlState();
     urlInitialized = true;
-
-    // Handle browser back/forward navigation
-    const unsubscribe = onPopState(() => {
-      applyUrlState();
-    });
-    return unsubscribe;
+    return onPopState(() => applyUrlState());
   });
 
   // ── URL write effect ───────────────────────────────────────────────
-  // Only write to URL after initial state has been read from URL
   $effect(() => {
     if (!urlInitialized) return;
 
-    // Collect hidden/pinned column IDs from datagrid leaf column state
     const allLeafCols = datagrid.columns.getLeafColumns();
 
     const hiddenIds = allLeafCols
@@ -145,51 +135,47 @@
     });
   });
 
-  // ── API Fetch ──────────────────────────────────────────────────────
-  async function fetchData() {
-    loading = true;
-    try {
-      const params = new URLSearchParams();
-      if (sortColumn) {
-        params.set('sort', sortColumn);
-        params.set('sortDir', sortDir);
-      }
-      params.set('page', String(page));
-      params.set('pageSize', String(pageSize));
-      if (search) params.set('search', search);
-      if (filters.length > 0) params.set('filters', JSON.stringify(filters));
-      params.set('filterLogic', filterLogic);
-      if (hireDateFrom) params.set('hireDateFrom', hireDateFrom);
-      if (hireDateTo) params.set('hireDateTo', hireDateTo);
+  // ── Data fetching via TanStack Query ──────────────────────────────
+  const queryClient = useQueryClient();
 
-      const res = await fetch(`/api/employees?${params}`);
-      const json: ApiResponse<Employee> = await res.json();
+  const employeesQuery = createQuery(() => {
+    const params = {
+      sort: sortColumn || undefined,
+      sortDir: sortColumn ? sortDir : undefined,
+      page,
+      pageSize,
+      search: search || undefined,
+      filters: filters.length > 0 ? filters : undefined,
+      filterLogic,
+      hireDateFrom: hireDateFrom || undefined,
+      hireDateTo: hireDateTo || undefined
+    };
+    return {
+      queryKey: employeesQueryKey(params),
+      queryFn: () => fetchEmployees(params)
+    };
+  });
 
-      // Feed fresh data into datagrid — invalidate cache so stale filtered/sorted
-      // data from the initial empty-data run is cleared before re-processing
-      datagrid.originalState.data = json.data;
+  // Sync query results into datagrid + local state
+  $effect(() => {
+    const result = employeesQuery.data;
+    if (!result) return;
+
+    // untrack: the datagrid methods read from $state internally (originalState,
+    // cacheManager, processors) — without untrack the $effect would subscribe
+    // to those reads and re-trigger itself in a loop (~100× → 20s delay).
+    untrack(() => {
+      datagrid.originalState.data = result.data;
       datagrid.cacheManager.invalidate('everything');
       datagrid.processors.data.executeFullDataTransformation();
 
-      data = json.data;
-      totalRows = json.total;
-
-      // Sync pagination metadata into the datagrid feature
-      datagrid.features.pagination.totalCount = json.total;
-      datagrid.features.pagination.pageCount = Math.ceil(json.total / pageSize);
-    } catch (err) {
-      console.error('Failed to fetch employees:', err);
-    } finally {
-      loading = false;
-    }
-  }
-
-  // Re-fetch on any query param change
-  $effect(() => {
-    // Touch reactive deps
-    sortColumn; sortDir; page; pageSize; search; filters; filterLogic; hireDateFrom; hireDateTo; refreshKey;
-    fetchData();
+      totalRows = result.total;
+      datagrid.features.pagination.totalCount = result.total;
+      datagrid.features.pagination.pageCount = Math.ceil(result.total / pageSize);
+    });
   });
+
+  let loading = $derived(employeesQuery.isFetching);
 
   // ── Page navigation helpers passed down to pagination component ────
   function goToPage(newPage: number) {
@@ -198,11 +184,11 @@
 
   function setPageSize(newSize: number) {
     pageSize = newSize;
-    page = 1; // reset to first page on page size change
+    page = 1;
   }
 </script>
 
-<div class="mx-auto max-w-[1400px] p-4">
+<div class="mx-auto max-w-350 p-4">
   <h1 class="mb-4 text-2xl font-bold">Tzezar Datagrid</h1>
 
   <TzezarFilterToolbar
@@ -212,7 +198,7 @@
     bind:filterLogic
     bind:hireDateFrom
     bind:hireDateTo
-    onRefresh={() => refreshKey++}
+    onRefresh={() => queryClient.invalidateQueries({ queryKey: ['employees'] })}
   />
 
   <TzezarDataTable

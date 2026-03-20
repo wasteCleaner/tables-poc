@@ -1,7 +1,7 @@
 import { inPlaceSort } from "fast-sort";
 import { isGroupColumn } from "../helpers/column-guards";
 import type { DatagridCore } from "../index.svelte";
-import type { AccessorColumn, ComputedColumn, SortingDirection } from "../types";
+import type { AccessorColumn, CellValue, ComputedColumn, SortingDirection } from "../types";
 import { findColumnById, flattenColumnStructureAndClearGroups } from "../utils.svelte";
 
 
@@ -45,7 +45,7 @@ export function applySorting<TOriginalRow>(datagrid: DatagridCore<TOriginalRow>,
                 direction: config.direction
             };
         })
-        .filter(Boolean) as { getValue: (row: TOriginalRow) => any; direction: SortingDirection }[];
+        .filter(Boolean) as { getValue: (row: TOriginalRow) => CellValue; direction: SortingDirection }[];
 
     // Decorate each row with its precomputed sort keys.
     const decorated = data.map(row => ({
@@ -53,19 +53,22 @@ export function applySorting<TOriginalRow>(datagrid: DatagridCore<TOriginalRow>,
         keys: sortConfigs.map(cfg => cfg.getValue(row))
     }));
 
+    type DecoratedRow = { row: TOriginalRow; keys: CellValue[] };
+
     // Create fast-sort instructions that operate on the decorated keys.
     // (Precompute the instruction array once, using the key index.)
     const instructions = sortConfigs
         .filter(cfg => cfg.direction !== "intermediate") // Ignore intermediate state for sorting
         .map((cfg, i) =>
             cfg.direction === "descending"
-                ? { desc: (d: { keys: any[] }) => d.keys[i] }
-                : { asc: (d: { keys: any[] }) => d.keys[i] }
+                ? { desc: (d: DecoratedRow) => d.keys[i] }
+                : { asc: (d: DecoratedRow) => d.keys[i] }
         );
 
     datagrid.processors.data.metrics.measure("Sorting", () => {
         // Use fast-sort to sort the decorated array.
-        // fast-sort’s inPlaceSort now only compares precomputed keys.
+        // fast-sort's inPlaceSort now only compares precomputed keys.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- fast-sort's ISortByFunction type is not generic enough
         inPlaceSort(decorated).by(instructions as any);
     });
 
