@@ -1,5 +1,5 @@
 <!--
-  TanStack toolbar — search, enum filters, filter chips, AND/OR toggle,
+  TanStack toolbar — search, enum filters, filter chips,
   column visibility, refresh button
 -->
 <script lang="ts">
@@ -11,7 +11,6 @@
     table: Table<Employee>;
     search: string;
     filters: FilterState[];
-    filterLogic: 'and' | 'or';
     hireDateFrom: string;
     hireDateTo: string;
     onRefresh: () => void;
@@ -21,7 +20,6 @@
     table,
     search = $bindable(),
     filters = $bindable(),
-    filterLogic = $bindable(),
     hireDateFrom = $bindable(),
     hireDateTo = $bindable(),
     onRefresh
@@ -146,15 +144,6 @@
       />
     </label>
 
-    <!-- AND/OR toggle -->
-    {#if filters.length > 1}
-      <button
-        onclick={() => (filterLogic = filterLogic === 'and' ? 'or' : 'and')}
-        class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-50"
-      >
-        {filterLogic.toUpperCase()}
-      </button>
-    {/if}
 
     <!-- Column visibility -->
     <div class="relative ml-auto">

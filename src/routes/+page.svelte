@@ -7,7 +7,6 @@
 		'Server-side pagination',
 		'Enum filters (Department, Role, Status)',
 		'Filter chips (removable)',
-		'Logical operators (AND/OR toggle)',
 		'Text search (debounced)',
 		'Date range picker',
 		'Column resize (drag handles)',

@@ -1,6 +1,6 @@
 <!--
   Tzezar filter toolbar — search input with debounce, enum filter dropdowns
-  (Department/Role/Status), removable filter chips, AND/OR toggle,
+  (Department/Role/Status), removable filter chips,
   column visibility dropdown, refresh button
 -->
 <script lang="ts">
@@ -12,7 +12,6 @@
     datagrid: DatagridCore<Employee>;
     search: string;
     filters: FilterState[];
-    filterLogic: 'and' | 'or';
     hireDateFrom: string;
     hireDateTo: string;
     onRefresh: () => void;
@@ -22,7 +21,6 @@
     datagrid,
     search = $bindable(),
     filters = $bindable(),
-    filterLogic = $bindable(),
     hireDateFrom = $bindable(),
     hireDateTo = $bindable(),
     onRefresh
@@ -156,15 +154,6 @@
       />
     </label>
 
-    <!-- AND/OR toggle (shown only when multiple filters active) -->
-    {#if filters.length > 1}
-      <button
-        onclick={() => (filterLogic = filterLogic === 'and' ? 'or' : 'and')}
-        class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-50"
-      >
-        {filterLogic.toUpperCase()}
-      </button>
-    {/if}
 
     <!-- Column visibility dropdown -->
     <div class="relative ml-auto">

@@ -24,8 +24,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		// Filters
 		const filters = parseFilters(params.get('filters'));
-		const filterLogic = params.get('filterLogic') === 'or' ? 'or' : 'and';
-		data = applyFilters(data, filters, filterLogic);
+		data = applyFilters(data, filters, 'and');
 
 		// Date range filter for hireDate
 		data = applyDateRange(data, params.get('hireDateFrom'), params.get('hireDateTo'));

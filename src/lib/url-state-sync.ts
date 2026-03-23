@@ -10,8 +10,7 @@ import { tableUrlStateSchema, type TableUrlState } from './schemas/table-url-sta
 /** Default values — omit from URL when value matches these */
 const DEFAULTS: Partial<TableUrlState> = {
 	page: 1,
-	pageSize: 20,
-	filterLogic: 'and'
+	pageSize: 20
 };
 
 /** Parse current URL search params and return typed state with defaults applied */
@@ -46,9 +45,6 @@ export function writeUrlState(state: Partial<TableUrlState>): void {
 	if (state.search) params.set('search', state.search);
 	if (state.filters) params.set('filters', state.filters);
 
-	if (state.filterLogic && state.filterLogic !== DEFAULTS.filterLogic) {
-		params.set('filterLogic', state.filterLogic);
-	}
 
 	if (state.hireDateFrom) params.set('hireDateFrom', state.hireDateFrom);
 	if (state.hireDateTo) params.set('hireDateTo', state.hireDateTo);
